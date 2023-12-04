@@ -1,25 +1,25 @@
 #! /usr/bin/env bash
 
-function error_exit() {
+error_exit () {
     msg="$1"
     >&2 echo "error: $msg"
     exit -1
 }
 
-function show_usage() {
+show_usage () {
     error_exit "usage: $0 (part1|part2) <input-file.txt>"
 }
 
 # iterates over games. you can read output with:
 # `each_game | while read -r gameno matches`
-function each_game() {
+each_game () {
     cat $input_file \
         | sed -E 's/^Game ([0-9]+): (.+)$/\1 '\''\2\'\''/g'
 }
 
 # iterates through matches from each_game. read output with:
 # `echo $matches | each_match | while read -r red green blue`
-function each_match() {
+each_match () {
     read -r raw_matches
 
     IFS=';' read -ra matches <<< "${raw_matches//\'}"
@@ -44,7 +44,7 @@ function each_match() {
     unset IFS
 }
 
-function part1() {
+part1 () {
     local result=0
     while read -r gameno matches; do
         local valid=true
@@ -69,8 +69,40 @@ function part1() {
     echo "part1: $result"
 }
 
-function part2() {
-    error_exit "TODO part2"
+best () {
+    read -ra arr <<< "$1"
+    if [[ ${#arr[@]} -eq 0 ]]; then
+        echo 0
+        return
+    fi
+
+    local res="${arr[0]}"
+    for x in "${arr[@]}"; do
+        if [[ $x -lt $res ]]; then
+            res=$x
+        fi
+    done
+
+    echo "$res"
+}
+
+part2 () {
+    local result=0
+    while read -r gameno matches; do
+        local min_red=0
+        local min_green=0
+        local min_blue=0
+        while read -r red green blue; do
+            if [[ $red -gt $min_red ]]; then min_red=$red; fi
+            if [[ $green -gt $min_green ]]; then min_green=$green; fi
+            if [[ $blue -gt $min_blue ]]; then min_blue=$blue; fi
+        done <<< "$(echo $matches | each_match)"
+
+        local power=$((min_red * min_green * min_blue))
+        result=$((result + power))
+    done <<< "$(each_game)"
+
+    echo "part2: $result"
 }
 
 # ==============================================================================
