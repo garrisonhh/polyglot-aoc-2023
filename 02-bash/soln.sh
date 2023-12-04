@@ -45,11 +45,28 @@ function each_match() {
 }
 
 function part1() {
-    each_game | while read -r gameno matches; do
-        echo $matches | each_match | while read -r red green blue; do
-            echo "$gameno) $red red $green green $blue blue"
-        done
-    done
+    local result=0
+    while read -r gameno matches; do
+        local valid=true
+        while read -r red green blue; do
+            if [[ $red -gt 12 ]]; then
+                valid=false
+                break
+            elif [[ $green -gt 13 ]]; then
+                valid=false
+                break
+            elif [[ $blue -gt 14 ]]; then
+                valid=false
+                break
+            fi
+        done <<< "$(echo $matches | each_match)"
+
+        if $valid; then
+            result=$((result + gameno))
+        fi
+    done <<< "$(each_game)"
+
+    echo "part1: $result"
 }
 
 function part2() {
@@ -58,7 +75,7 @@ function part2() {
 
 # ==============================================================================
 
-if [ $# -ne 2 ]; then
+if [[ $# -ne 2 ]]; then
     show_usage
 fi
 
